@@ -52,7 +52,7 @@ def get_verse(query, books):
 
     except Exception as e:
         print(e)
-        raise InvalidFormatException
+        raise InvalidFormatException(query)
 
     bib = list()
     try:
@@ -60,7 +60,7 @@ def get_verse(query, books):
         bib = parse_bible(path)
     except Exception as e:
         print(e)
-        raise InvalidBookException
+        raise InvalidBookException(query)
 
     final = str()
 
@@ -75,7 +75,7 @@ def get_verse(query, books):
         else: final = bib[int(parts[-1])-1] + "\n"
     except Exception as e:
         print(e)
-        raise InvalidVerseException
+        raise InvalidVerseException(query)
     return final
 
 def parse_dir(filepath, outfilepath):
