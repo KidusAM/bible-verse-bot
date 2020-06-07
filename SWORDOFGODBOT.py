@@ -1,5 +1,5 @@
 from telegram.ext import *
-from telegram import ReplyKeyboardMarkup, KeyboardButton
+from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 import logging
 import os
 from utils import *
@@ -8,7 +8,7 @@ from collections import OrderedDict
 import pdb
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-bot_token = "1198935475:AAF_4FQ5VkTLmB1KaM_whhoEgr459nxLUG4"
+bot_token = "1198935475:AAEbgVC216nGVrp3hxUvfgNuAJvlcdqOXU8"
 
 en_books = index_books_en(os.path.join("bible", "books_en.txt"))
 
@@ -32,24 +32,29 @@ def add(update, context, arg=None):
     # pdb.set_trace()
     try: 
         
-        verse = get_verse(argument, en_books)
+        verse = get_verse(argument, en_books, update.effective_user.id)
+        keyboard = [
+        [InlineKeyboardButton("Amharic", callback_data="am"), 
+         InlineKeyboardButton("English", callback_data="en")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
         if add_verse(update.effective_user.id, argument.title()):
             message(context, update, "This verse is already in your list.")
         else:
             message(context, update, "Successfully added " + argument.title() + " :")
-            message(context, update, verse)
+            message(context, update, verse, reply_markup)
         
     except Exception as e: 
         if not arg: handle_verse_exception(e, update, context); return;
         else: message(context, update, f"'{arg}' " + " is not a valid verse")
-    
+
     
     
 
 def remove(update, context):
     argument = ' '.join(context.args)
     try: 
-        get_verse(argument, en_books)
+        get_verse(argument, en_books, update.effective_user.id)
         remove_verse(update.effective_user.id, argument.title())
         message(context, update, "Successfully removed " + argument.title())
         
@@ -66,11 +71,22 @@ def get_all(update, context):
 def get(update, context):
     argument = ' '.join(context.args)
     try:    
-        verse = get_verse(argument, en_books)
-        message(context, update, message=verse)
+        verse = get_verse(argument, en_books, update.effective_user.id)
+        keyboard = [
+        [InlineKeyboardButton("Amharic", callback_data="am"),
+         InlineKeyboardButton("English", callback_data="en")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        message(context, update, verse, reply_markup)
     except Exception as e:
         handle_verse_exception(e, update, context)
 
+def choose_lang(update, context):
+    query = update.callback_query
+
+    query.answer()
+    change_lang(update.effective_user.id, query.data)
+    # query.edit_message_text()
 
 
 def handle_verse_exception(e, update, context):
@@ -131,8 +147,18 @@ def add_command(command, func, disp):
     disp.add_handler(handler)
 
 
-def message(ctx, upd, message):
-    ctx.bot.send_message(chat_id=upd.effective_chat.id, text=message)
+def message(ctx, upd, message, reply_mark=None):
+    ctx.bot.send_message(chat_id=upd.effective_chat.id, text=message, 
+                         reply_markup = reply_mark)
+
+def language(update, context):
+    keyboard = [
+        [InlineKeyboardButton("Amharic", callback_data="am"),
+         InlineKeyboardButton("English", callback_data="en")]
+        ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    message(context, update, "Please choose your language", reply_markup)
+    
     
 def msg_handler(update, context):
     user_id = update.effective_user.id
@@ -174,6 +200,7 @@ def main():
             updater.stop()
             exit(1)
         
+    updater.dispatcher.add_handler(CallbackQueryHandler(choose_lang))
     add_command('end_now_all', end_now_all, dispatcher)
     
     add_command('start', start, dispatcher)
@@ -186,6 +213,7 @@ def main():
     add_command('all', get_all, dispatcher)
     add_command('begin_train', begin_train, dispatcher)    
     add_command('end_train', end_train, dispatcher)
+    add_command('language', language, dispatcher)
     
     updater.start_polling()
     updater.idle()
