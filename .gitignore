@@ -131,3 +131,6 @@ dmypy.json
 #token for the bot
 token.txt
 dev.txt
+
+#extracted version of Amharic bible
+bible/am_new/
