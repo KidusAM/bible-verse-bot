@@ -6,8 +6,8 @@ import pdb
 
 
 
-
-DEV = 447076481
+with open('dev.txt') as dev_file:
+    DEV = dev_file.read().strip() 
 en_books = index_books_en(os.path.join("bible", "books_en.txt"))
 
 class NoSuchVerseException(Exception): pass

@@ -8,7 +8,8 @@ from collections import OrderedDict
 import pdb
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-bot_token = "1198935475:AAEbgVC216nGVrp3hxUvfgNuAJvlcdqOXU8"
+with open("token.txt") as token_file:
+    bot_token = token_file.read().strip() 
 
 en_books = index_books_en(os.path.join("bible", "books_en.txt"))
 
